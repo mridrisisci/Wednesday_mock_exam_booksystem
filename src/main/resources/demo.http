@@ -1,0 +1,30 @@
+POST localhost:7070/api/books/populate
+
+###
+GET localhost:7070/api/books/all
+
+###
+GET localhost:7070/api/books/6
+
+###
+POST localhost:7070/api/books/create
+Content-Type: "application/json"
+
+{
+  "title": "Java Programming",
+  "isbn": "978-393933848"
+}
+
+###
+PATCH localhost:7070/api/books/7
+Content-Type: "application/json"
+
+{
+    "title": "Lucky Update"
+}
+
+###
+DELETE localhost:7070/api/books/7
+
+###
+GET localhost:7070/api/books/search/2
