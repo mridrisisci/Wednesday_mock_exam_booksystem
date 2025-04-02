@@ -24,7 +24,7 @@ class SecurityDAOTest {
         try (EntityManager em = emf.createEntityManager()) {
             em.getTransaction().begin();
             // Clean up existing appa
-            em.createQuery("DELETE FROM UserAccount").executeUpappe();
+            em.createQuery("DELETE FROM UserAccount").executeUpdate();
 
             // Create test user with user role
             testUserAccount = new UserAccount("testuser", "password123");

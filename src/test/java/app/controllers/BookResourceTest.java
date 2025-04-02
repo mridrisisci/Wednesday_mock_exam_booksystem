@@ -2,37 +2,44 @@ package app.controllers;
 
 import app.config.ApplicationConfig;
 import app.config.HibernateConfig;
-import app.entities.Room;
+import app.dto.AuthorDTO;
+import app.dto.BookDTO;
+import app.entities.Author;
+import app.entities.Book;
 import app.routes.Routes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.RestAssured;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class HotelResourceTest
+class BookResourceTest
 {
 
     private static final EntityManagerFactory emf = HibernateConfig.getEntityManagerFactoryForTest();
     final ObjectMapper objectMapper = new ObjectMapper();
-    Hotel t1, t2;
-    final Logger logger = LoggerFactory.getLogger(HotelResourceTest.class.getName());
+    Author a1, a2;
+    Book b1, b2, b3;
+    final Logger logger = LoggerFactory.getLogger(BookResourceTest.class.getName());
 
 
     @BeforeAll
     static void setUpAll()
     {
-        HotelController hotelController = new HotelController(emf);
+        BookController bookController = new BookController(emf);
         SecurityController securityController = new SecurityController(emf);
-        Routes routes = new Routes(hotelController, securityController);
+        Routes routes = new Routes(bookController, securityController);
         ApplicationConfig
                 .getInstance()
                 .initiateServer()
@@ -50,14 +57,21 @@ class HotelResourceTest
         try (EntityManager em = emf.createEntityManager())
         {
             //TestEntity[] entities = EntityPopulator.populate(genericDAO);
-            t1 = new Hotel("TestEntityA");
-            t2 = new Hotel("TestEntityB");
+            a1 = new Author("Test Author A");
+            a2 = new Author("Test Author B");
+            b1 = new Book( "Book1");
+            b2 = new Book( "Book2");
+            b3 = new Book( "Book3");
             em.getTransaction().begin();
-            em.createQuery("DELETE FROM Room ").executeUpdate();
-            em.createQuery("DELETE FROM Hotel ").executeUpdate();
+            em.createQuery("DELETE FROM Author ").executeUpdate();
+            em.createQuery("DELETE FROM Book ").executeUpdate();
 
-            em.persist(t1);
-            em.persist(t2);
+            em.persist(a1);
+            em.persist(a2);
+
+            em.persist(b1);
+            em.persist(b2);
+            em.persist(b3);
             em.getTransaction().commit();
         }
         catch (Exception e)
@@ -69,33 +83,33 @@ class HotelResourceTest
     @Test
     void getAll()
     {
-        given().when().get("/hotel").then().statusCode(200).body("size()", equalTo(2));
+        given().when().get("/books/all").then().statusCode(200).body("size()", equalTo(3));
     }
 
     @Test
     void getById()
     {
-        given().when().get("/hotel/" + t2.getId()).then().statusCode(200).body("id", equalTo(t2.getId().intValue()));
+        given().when().get("/books/" + b2.getId()).then().statusCode(200).body("id", equalTo(b2.getId().intValue()));
     }
 
     @Test
     void create()
     {
-        Hotel entity = new Hotel("Thor Partner Hotel", "Carl Gustavs Gade 1");
-        Room room = new Room("201");
-        entity.addRoom(room);
+        Author entity = new Author("HC Andersen");
+        Book book = new Book("Peter Plys");
+        entity.addBook(book);
         try
         {
-            String json = objectMapper.writeValueAsString(new HotelDTO(entity));
+            String json = objectMapper.writeValueAsString(new BookDTO(book));
             given().when()
                     .contentType("application/json")
                     .accept("application/json")
                     .body(json)
-                    .post("/hotel")
+                    .post("/create")
                     .then()
                     .statusCode(200)
-                    .body("name", equalTo(entity.getName()))
-                    .body("address", equalTo(entity.getAddress()));
+                    .body("title", equalTo(book.getTitle()));
+                    //.body("address", equalTo(entity.getAddress()));
                     //.body("rooms.size()", equalTo(1));
         } catch (JsonProcessingException e)
         {
@@ -108,15 +122,15 @@ class HotelResourceTest
     @Test
     void update()
     {
-        Hotel entity = new Hotel("New entity2");
+        Author entity = new Author("New entity2");
         try
         {
-            String json = objectMapper.writeValueAsString(new HotelDTO(entity));
+            String json = objectMapper.writeValueAsString(new AuthorDTO(entity));
             given().when()
                     .contentType("application/json")
                     .accept("application/json")
                     .body(json)
-                    .put("/hotel/" + t1.getId()) // double check id
+                    .put("/books/" + a1.getId()) // double check id
                     .then()
                     .statusCode(200)
                     .body("name", equalTo("New entity2"));
@@ -131,7 +145,7 @@ class HotelResourceTest
     void delete()
     {
         given().when()
-                .delete("/hotel/" + t1.getId())
+                .delete("/books/" + a1.getId())
                 .then()
                 .statusCode(204);
     }

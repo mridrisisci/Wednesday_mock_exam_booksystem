@@ -35,6 +35,12 @@ public class Book
         this.author = bookDTO.getAuthor();
     }
 
+    public Book(Integer id, String title)
+    {
+        this.id = id;
+        this.title = title;
+    }
+
     public Book(String title)
     {
         this.title = title;
